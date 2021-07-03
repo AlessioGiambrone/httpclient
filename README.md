@@ -99,7 +99,32 @@ GET https://api.wheretheiss.at/v1/satellites/25544/positions
 GET https://api.wheretheiss.at/v1/satellites/25544/positions?timestamps=1609462861&units=kilometers
 ```
 
-## Features
+### Headers
+
+Headers must be set after the URL and its parameters, without spaces on the left.
+
+Header name must be separated from its value by `: ` (colon followed by space).
+
+Example:
+
+```http
+GET https://api.wheretheiss.at/v1/satellites/25544/positions
+auth: something
+```
+
+### Payload
+
+After headers leave a blank line; after that everything will be treated as payload.
+
+Example:
+
+```http
+GET https://api.wheretheiss.at/v1/satellites/25544/positions
+
+{
+  "some": "payload"
+}
+```
 
 ### TODOs
 
