@@ -63,6 +63,9 @@ content-type: "application/json"
 ]
 ```
 
+Executing `httpclient` with double `v` flag, `-vv`, will print also the
+request as it was parsed (useful for debugging).
+
 ## `.HTTP` file synax
 
 ### TL;DR
