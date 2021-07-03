@@ -108,7 +108,7 @@ Header name must be separated from its value by `: ` (colon followed by space).
 Example:
 
 ```http
-GET https://api.wheretheiss.at/v1/satellites/25544/positions
+GET https://example.com
 auth: something
 ```
 
@@ -119,7 +119,7 @@ After headers leave a blank line; after that everything will be treated as paylo
 Example:
 
 ```http
-GET https://api.wheretheiss.at/v1/satellites/25544/positions
+GET https://example.com
 
 {
   "some": "payload"
