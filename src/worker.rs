@@ -114,7 +114,7 @@ impl HTTPParser {
             // this is an URL parameter
             return Ok(());
         }
-        let split = line.split(": ").collect::<Vec<&str>>();
+        let split = line.split(":").collect::<Vec<&str>>();
         if &split.len() < &2 {
             return Err(Error::new(
                 ErrorKind::Other,
@@ -123,9 +123,10 @@ impl HTTPParser {
         }
         let key = split[0];
         let values = &split[1..split.len()];
-        let value = values
+        let raw_value = values
             .iter()
             .fold(String::from(""), |acc, x| acc.to_string() + x);
+        let value = raw_value.trim_start();
         self.request
             .headers
             .insert(key.to_string(), value.to_string());
@@ -200,9 +201,16 @@ impl FileParser {
 
     pub fn parse_many(self, file_content: &str) -> Result<Vec<request::Request>> {
         let mut requests: Vec<request::Request> = Vec::new();
-        for req in file_content.split("###\n") {
+        let mut raw_requests: Vec<Vec<String>> = vec![vec![]];
+        for line in file_content.split("\n") {
+            if line.starts_with("###") {
+                raw_requests.push(Vec::new());
+            }
+            raw_requests.last_mut().unwrap().push(line.to_string());
+        }
+        for raw_request in raw_requests {
             let mut w = HTTPParser::new()?;
-            w.parse(req)?;
+            w.parse(&raw_request.join("\n"))?;
             requests.push(w.request);
         }
 
@@ -322,7 +330,43 @@ mod tests {
         let result = &hrp.parse_many(contents).unwrap();
         assert_eq!(&result[0].url, "https://it.wikipedia.org");
         assert_eq!(&result[0].method, "GET");
+        assert_eq!(&result[0].body, "");
         assert_eq!(&result[1].url, "https://en.wikipedia.org");
         assert_eq!(&result[1].method, "POST");
+    }
+
+    #[test]
+    fn long_multi_requests() {
+        let contents = "GET https://it.wikipedia.org
+Authorization: Basic none
+
+### Create
+POST https://it.wikipedia.org/something
+Authorization: Basic none
+Content-Type: application/x-www-form-urlencoded
+
+payload=my_payload
+
+### Delete
+DELETE https://it.wikipedia.org/something
+Authorization: Basic none
+
+### Test
+GET https://it.wikipedia.org/something";
+        let hrp = FileParser {};
+        let result = &hrp.parse_many(contents).unwrap();
+        assert_eq!(&result[0].url, "https://it.wikipedia.org");
+        assert_eq!(&result[0].method, "GET");
+        assert!(&result[0].headers.contains_key("Authorization"));
+        assert_eq!(
+            &result[0].headers.get("Authorization"),
+            &Some(&"Basic none".to_string())
+        );
+        assert_eq!(&result[0].body, "");
+        assert_eq!(&result[1].url, "https://it.wikipedia.org/something");
+        assert_eq!(&result[1].method, "POST");
+        assert_eq!(&result[1].body, "payload=my_payload");
+        assert_eq!(&result[2].url, "https://it.wikipedia.org/something");
+        assert_eq!(&result[2].method, "DELETE");
     }
 }
