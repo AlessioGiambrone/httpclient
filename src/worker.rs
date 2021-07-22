@@ -33,7 +33,7 @@ use std::io::{Error, ErrorKind, Result as IoResult};
 pub struct HTTPParser {
     pub request: request::Request,
     head_done: bool,
-    body_buffer: String,
+    body_buffer: Vec<String>,
 }
 
 impl HTTPParser {
@@ -41,7 +41,7 @@ impl HTTPParser {
         let w = HTTPParser {
             request: request::Request::new(),
             head_done: false,
-            body_buffer: "".to_string(),
+            body_buffer: Vec::new(),
         };
 
         Ok(w)
@@ -59,7 +59,7 @@ impl HTTPParser {
             }
             if self.head_done {
                 // RAW body: we're after the URL/params/headers section
-                self.body_buffer += &line;
+                self.body_buffer.push(line.to_string());
                 continue;
             }
             if HTTPParser::is_section_break(line) && self.request.url != "" {
@@ -79,7 +79,7 @@ impl HTTPParser {
                 }
             }
         }
-        self.request.body = self.body_buffer.to_string();
+        self.request.body = self.body_buffer.join("\n").trim().to_string();
 
         Ok(())
     }
@@ -305,10 +305,10 @@ mod tests {
 
     #[test]
     fn body() {
-        let contents = "POST https://it.wikipedia.org\n#comment\n\nthis is the body";
+        let contents = "POST https://it.wikipedia.org\n#comment\n\nthis is\nthe body";
         let mut hrp = HTTPParser::new().unwrap();
         &hrp.parse(contents).unwrap();
-        assert_eq!(&hrp.request.body, "this is the body");
+        assert_eq!(&hrp.request.body, "this is\nthe body");
     }
 
     #[test]
