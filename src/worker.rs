@@ -211,7 +211,9 @@ impl FileParser {
         for raw_request in raw_requests {
             let mut w = HTTPParser::new()?;
             w.parse(&raw_request.join("\n"))?;
-            requests.push(w.request);
+            if w.request.url != "" {
+                requests.push(w.request);
+            }
         }
 
         Ok(requests)
@@ -368,5 +370,25 @@ GET https://it.wikipedia.org/something";
         assert_eq!(&result[1].body, "payload=my_payload");
         assert_eq!(&result[2].url, "https://it.wikipedia.org/something");
         assert_eq!(&result[2].method, "DELETE");
+    }
+
+    #[test]
+    fn long_header() {
+        let contents = "###
+###
+###
+
+POST https://it.wikipedia.org/something
+Authorization: Basic none
+Content-Type: application/x-www-form-urlencoded
+
+payload=my_payload
+";
+        let hrp = FileParser {};
+        let result = &hrp.parse_many(contents).unwrap();
+        assert_eq!(result.len(), 1);
+        assert_eq!(&result[0].url, "https://it.wikipedia.org/something");
+        assert_eq!(&result[0].method, "POST");
+        assert_eq!(&result[0].body, "payload=my_payload");
     }
 }

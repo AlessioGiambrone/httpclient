@@ -5,7 +5,6 @@ use reqwest::Method;
 use std::collections::HashMap;
 use std::fmt;
 use std::time::Duration;
-use std::time::Instant;
 
 pub struct Request {
     pub method: String,

@@ -11,6 +11,7 @@ fn main() -> Result<()> {
             Arg::with_name("INPUT")
                 .help("Path to the .HTTP file to use")
                 .required(true)
+                .min_values(1)
                 .index(1),
         )
         .arg(
@@ -49,7 +50,7 @@ Numbering starts from 0; use \"a\" to execute them all",
         .get_matches();
 
     let verbosity = matches.occurrences_of("v");
-    let filepath = matches.value_of("INPUT").unwrap();
+    let filepaths: Vec<_> = matches.values_of("INPUT").unwrap().collect();
     let request_timeout: u64 = matches.value_of("timeout").unwrap().parse::<u64>()?;
     let selected_req_number_str = matches.value_of("request number").unwrap();
     let selected_req_number: isize = match selected_req_number_str {
@@ -58,8 +59,12 @@ Numbering starts from 0; use \"a\" to execute them all",
         _ => selected_req_number_str.parse::<isize>()?,
     };
 
-    let rqsp = httpclient::worker::FileParser {};
-    let reqs = rqsp.parse_from_file(&filepath)?;
+    for filepath in filepaths {
+        let rqsp = httpclient::worker::FileParser {};
+        let reqs = rqsp.parse_from_file(&filepath)?;
 
-    httpclient::execute_requests(verbosity, request_timeout, reqs, selected_req_number)
+        httpclient::execute_requests(verbosity, request_timeout, reqs, selected_req_number);
+    }
+
+    Ok(())
 }
