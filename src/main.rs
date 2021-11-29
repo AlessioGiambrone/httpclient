@@ -63,7 +63,7 @@ Numbering starts from 0; use \"a\" to execute them all",
         let rqsp = httpclient::worker::FileParser {};
         let reqs = rqsp.parse_from_file(&filepath)?;
 
-        httpclient::execute_requests(verbosity, request_timeout, reqs, selected_req_number);
+        httpclient::execute_requests(verbosity, request_timeout, reqs, selected_req_number)?;
     }
 
     Ok(())

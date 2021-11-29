@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use reqwest::blocking::{Client, Response};
 use reqwest::header;
 use reqwest::Method;
@@ -27,14 +27,22 @@ impl Request {
         }
     }
 
-    pub fn execute(&self, timeout: u64) -> Result<Response, Box<dyn std::error::Error>> {
+    pub fn execute(&self, timeout: u64) -> anyhow::Result<Response> {
         let client = Client::new();
         let response_body = client
             .request(
                 Method::from_bytes(self.method.as_bytes())?,
-                self.get_url_with_parameters()?,
+                self.get_url_with_parameters().with_context(|| {
+                    format!(
+                        "unable to get valid URL to call for request\nrequest URL: {}\nrequest URL params: {:#?}",
+                        self.url, self.url_parameters,
+                    )
+                })?,
             )
-            .headers(self.format_headers()?)
+            .headers(
+                self.format_headers()
+                    .with_context(|| format!("unable to format headers {:#?}", self.headers))?,
+            )
             .timeout(Duration::new(timeout, 0))
             .body(self.body.to_string())
             .send()?;
@@ -42,7 +50,7 @@ impl Request {
         Ok(response_body)
     }
 
-    fn format_headers(&self) -> Result<header::HeaderMap, Box<dyn std::error::Error>> {
+    fn format_headers(&self) -> Result<header::HeaderMap> {
         let mut reqw_headers = header::HeaderMap::new();
         for v in self.headers.iter() {
             reqw_headers.append(
@@ -53,7 +61,7 @@ impl Request {
         Ok(reqw_headers)
     }
 
-    fn get_url_with_parameters(&self) -> Result<String, Box<dyn std::error::Error>> {
+    fn get_url_with_parameters(&self) -> Result<String> {
         let url: reqwest::Url;
         if self.url_parameters.len() > 0 {
             url = reqwest::Url::parse_with_params(&self.url, self.url_parameters.iter())?;

@@ -43,7 +43,7 @@ fn execute_request(verbosity: u64, timeout: u64, req: &request::Request) -> Resu
         println!("===== Request:\n{}\n===== Response:", req)
     }
     let start_instant = Instant::now();
-    let response = req.execute(timeout).expect("unable to execute request");
+    let response = req.execute(timeout)?;
     let elapsed = start_instant.elapsed();
 
     if verbosity > 0 {

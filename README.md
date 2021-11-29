@@ -2,9 +2,6 @@
   <h1 align="center" style="font-family:'Lucida Console', monospace">HTTPCLIENT</h1>
 </div>
 <div align="center">
- <strong>
-  HTTP calls for everyone
- </strong>
 </div>
 
 </br>
