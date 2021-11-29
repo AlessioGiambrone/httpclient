@@ -125,10 +125,3 @@ GET https://example.com
   "some": "payload"
 }
 ```
-
-### TODOs
-
-- [ ] VSCode environment file support
-- [ ] JetBrains environment file support
-- [ ] CURL export
-- [ ] CURL import
